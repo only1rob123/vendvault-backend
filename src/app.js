@@ -4,7 +4,12 @@ require('dotenv').config();
 
 const app = express();
 
-app.use(cors({ origin: ['http://localhost:5173', 'http://localhost:4173'], credentials: true }));
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:4173',
+  ...(process.env.FRONTEND_URL ? [process.env.FRONTEND_URL] : []),
+];
+app.use(cors({ origin: allowedOrigins, credentials: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
