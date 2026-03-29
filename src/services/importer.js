@@ -7,7 +7,13 @@ const { getDb } = require('../db/database');
  */
 async function importTransactionLineItems(csvContent, companyId, filename) {
   const pool = getDb();
-  const records = parse(csvContent, { columns: true, skip_empty_lines: true, trim: true });
+  // Cantaloupe Transaction Line Item exports have no header row — define columns positionally
+  const TLI_COLUMNS = [
+    'Device Serial Num', 'Ref Nbr', 'Trans Type Code', 'Masked Card Number',
+    'Tran Amount', 'Item', 'Line Item Price', 'Line Item MDB Number',
+    'Quantity', 'Tran Date', 'Tran Time', 'Item Desc', 'Card Token'
+  ]
+  const records = parse(csvContent, { columns: TLI_COLUMNS, skip_empty_lines: true, trim: true });
 
   const result = { rows_total: 0, rows_imported: 0, rows_skipped: 0, rows_error: 0, errors: [] };
 
