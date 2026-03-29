@@ -31,4 +31,20 @@ router.get('/me', require('../middleware/auth'), (req, res) => {
   res.json({ user: req.user });
 });
 
+// GET /api/auth/company — returns company details including inbound email token
+router.get('/company', require('../middleware/auth'), async (req, res) => {
+  try {
+    const pool = getDb();
+    const { rows } = await pool.query(
+      'SELECT id, name, slug, plan, inbound_email_token FROM vend_companies WHERE id = $1',
+      [req.user.company_id]
+    );
+    if (!rows[0]) return res.status(404).json({ error: 'Company not found' });
+    res.json(rows[0]);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 module.exports = router;

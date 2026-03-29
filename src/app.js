@@ -7,11 +7,15 @@ const app = express();
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:4173',
+  'https://app.vendvault.net',
   ...(process.env.FRONTEND_URL ? [process.env.FRONTEND_URL] : []),
 ];
 app.use(cors({ origin: allowedOrigins, credentials: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Inbound email webhook — no auth, validated by token in recipient address
+app.use('/api/inbound', require('./routes/inbound'));
 
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/locations', require('./routes/locations'));
