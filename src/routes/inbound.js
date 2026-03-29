@@ -16,7 +16,10 @@ const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 
 
 function detectCsvType(filename) {
   const lower = (filename || '').toLowerCase()
-  if (lower.includes('transaction line item') || lower.includes('transaction_line_item')) {
+  if (
+    lower.includes('transaction line item') || lower.includes('transaction_line_item') ||
+    lower.includes('trans-line-item') || lower.includes('trans_line_item')
+  ) {
     return 'transaction-line-items'
   }
   if (
