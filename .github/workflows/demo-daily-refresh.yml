@@ -1,0 +1,33 @@
+name: Demo Account — Daily Data Refresh
+
+on:
+  schedule:
+    # Runs at 03:00 UTC every night (10 PM EST / 11 PM EDT)
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+    # Allow manual trigger from GitHub Actions UI for testing
+
+jobs:
+  refresh:
+    name: Generate yesterday's sales & restock
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run daily refresh
+        env:
+          DATABASE_URL: ${{ secrets.DEMO_DATABASE_URL }}
+          NODE_ENV: production
+        run: node scripts/daily-demo-refresh.js
