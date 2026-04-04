@@ -8,7 +8,7 @@ router.use(auth);
 
 // Assign or reassign product to slot
 router.post('/:slotId/assign', async (req, res) => {
-  const { product_id, notes } = req.body;
+  const { product_id, sell_price, purchase_price, notes } = req.body;
   try {
     const pool = getDb();
     const { rows: slotRows } = await pool.query(
@@ -24,14 +24,26 @@ router.post('/:slotId/assign', async (req, res) => {
     );
 
     if (product_id) {
+      // sell_price / purchase_price are optional overrides; NULL means fall back to product default
       await pool.query(
-        `INSERT INTO slot_product_assignments (id, company_id, slot_id, product_id, is_current, notes) VALUES ($1, $2, $3, $4, true, $5)`,
-        [uuidv4(), req.user.company_id, req.params.slotId, product_id, notes || null]
+        `INSERT INTO slot_product_assignments (id, company_id, slot_id, product_id, sell_price, purchase_price, is_current, notes)
+         VALUES ($1, $2, $3, $4, $5, $6, true, $7)`,
+        [uuidv4(), req.user.company_id, req.params.slotId, product_id,
+          sell_price != null ? sell_price : null,
+          purchase_price != null ? purchase_price : null,
+          notes || null]
       );
     }
 
     const { rows } = await pool.query(`
-      SELECT s.*, p.name as product_name, p.category, p.sell_price, p.purchase_price,
+      SELECT s.*,
+        p.name as product_name, p.category,
+        COALESCE(spa.sell_price, p.sell_price)       as sell_price,
+        COALESCE(spa.purchase_price, p.purchase_price) as purchase_price,
+        spa.sell_price     as slot_sell_price,
+        spa.purchase_price as slot_purchase_price,
+        p.sell_price       as product_sell_price,
+        p.purchase_price   as product_purchase_price,
         spa.id as assignment_id, spa.assigned_at
       FROM machine_slots s
       LEFT JOIN slot_product_assignments spa ON spa.slot_id = s.id AND spa.is_current = true

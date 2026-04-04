@@ -42,7 +42,13 @@ router.get('/:id', async (req, res) => {
     if (!mRows[0]) return res.status(404).json({ error: 'Not found' });
 
     const { rows: slots } = await pool.query(`
-      SELECT s.*, p.name as product_name, p.category, p.sell_price, p.purchase_price, p.image_url,
+      SELECT s.*, p.name as product_name, p.category, p.image_url,
+        COALESCE(spa.sell_price, p.sell_price)         as sell_price,
+        COALESCE(spa.purchase_price, p.purchase_price) as purchase_price,
+        spa.sell_price     as slot_sell_price,
+        spa.purchase_price as slot_purchase_price,
+        p.sell_price       as product_sell_price,
+        p.purchase_price   as product_purchase_price,
         spa.id as assignment_id, spa.product_id, spa.assigned_at
       FROM machine_slots s
       LEFT JOIN slot_product_assignments spa ON spa.slot_id = s.id AND spa.is_current = true
@@ -177,7 +183,13 @@ router.post('/:id/layout', async (req, res) => {
       [machineId]
     );
     const { rows: slots } = await pool.query(`
-      SELECT s.*, p.name as product_name, p.category, p.sell_price, p.purchase_price,
+      SELECT s.*, p.name as product_name, p.category,
+        COALESCE(spa.sell_price, p.sell_price)         as sell_price,
+        COALESCE(spa.purchase_price, p.purchase_price) as purchase_price,
+        spa.sell_price     as slot_sell_price,
+        spa.purchase_price as slot_purchase_price,
+        p.sell_price       as product_sell_price,
+        p.purchase_price   as product_purchase_price,
         spa.id as assignment_id, spa.product_id, spa.assigned_at
       FROM machine_slots s
       LEFT JOIN slot_product_assignments spa ON spa.slot_id=s.id AND spa.is_current=true
