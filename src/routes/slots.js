@@ -55,6 +55,25 @@ router.post('/:slotId/assign', async (req, res) => {
   } catch (e) { console.error(e); res.status(500).json({ error: e.message }); }
 });
 
+// Update prices on the current slot assignment (no reassignment needed)
+router.patch('/:slotId/price', async (req, res) => {
+  const { sell_price, purchase_price } = req.body;
+  try {
+    const pool = getDb();
+    const { rows } = await pool.query(
+      `UPDATE slot_product_assignments
+       SET sell_price = $1, purchase_price = $2
+       WHERE slot_id = $3 AND is_current = true AND company_id = $4
+       RETURNING *`,
+      [sell_price != null ? sell_price : null,
+       purchase_price != null ? purchase_price : null,
+       req.params.slotId, req.user.company_id]
+    );
+    if (!rows[0]) return res.status(404).json({ error: 'No active assignment for this slot' });
+    res.json({ success: true });
+  } catch (e) { console.error(e); res.status(500).json({ error: e.message }); }
+});
+
 // Update slot stock quantity
 router.patch('/:slotId/stock', async (req, res) => {
   const { quantity, notes } = req.body;
